@@ -125,10 +125,30 @@ class QuestionIndexViewTest(TestCase):
         )
 class QuestionDetailViewTest(TestCase):
 
+    def test_future_question_with_no_choice(self):
+        """test if page gives 404 when someone type addres of future question
+        with no choices manually"""
+        future_question = create_question(question_text="Future question",
+                                        days=5)
+        url = reverse("polls:detail", args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question_with_no_choice(self):
+        """test if page gives 404 when someone type addres of past question
+        with no choices manually"""
+        past_question = create_question(question_text="Past question",
+                                        days=-5)
+        url = reverse("polls:detail", args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_future_question(self):
         """test if detail view of nor published future question gives 404"""
         future_question = create_question(question_text='Future question.',
                                             days=5)
+        future_choice = create_choice(choice_text='Future choice',
+                                    question=future_question)
         url = reverse('polls:detail', args=(future_question.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
@@ -138,6 +158,8 @@ class QuestionDetailViewTest(TestCase):
         the question text"""
         past_question = create_question(question_text='Past question',
                                         days=-5)
+        past_choice = create_choice(choice_text="Past choice",
+                                    question=past_question)
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)

@@ -60,10 +60,11 @@ class QuestionIndexViewTest(TestCase):
 
     def test_question_empty_choices(self):
         """test if question with no choices return 404"""
-        question = create_question(question_text="Some question", days=0)
+        question = create_question(question_text="Some question", days=-1)
         response = self.client.get(POLLS_INDEX)
-        self.assertEqual(response.status_code, 404)
-
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
 
     def test_question_with_choice(self):
         """test if question with any choice will be displayed"""
@@ -91,6 +92,7 @@ class QuestionIndexViewTest(TestCase):
     def test_future_question(self):
         """test if question with future question date are not displayed"""
         question = create_question(question_text="Future question", days=30)
+        choice = create_choice(choice_text="future choice", question=question)
         response = self.client.get(POLLS_INDEX)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No polls are available")
@@ -99,7 +101,11 @@ class QuestionIndexViewTest(TestCase):
     def test_future_question_and_past_question(self):
         """test if both future and past questions onley past are displayed"""
         past_one = create_question(question_text="Past question.", days=-10)
+        past_choice = create_choice(choice_text="past choice",
+                                    question=past_one)
         future_one = create_question(question_text="Future question.", days=30)
+        future_choice = create_choice(choice_text="future choice",
+                                    question=future_one)
         response = self.client.get(POLLS_INDEX)
         self.assertQuerysetEqual(
             response.context['latest_question_list'],
@@ -109,7 +115,9 @@ class QuestionIndexViewTest(TestCase):
     def test_two_past_questions(self):
         """test if both past quesions is displayed"""
         question1 = create_question(question_text="past question1.", days=-30)
+        choice1 = create_choice(choice_text="past choice1", question=question1)
         question2 = create_question(question_text="past question2.", days=-5)
+        choice2 = create_choice(choice_text="past choice2", question=question2)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
             response.context['latest_question_list'],

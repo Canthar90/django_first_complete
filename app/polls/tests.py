@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.test import Client
 
-from .models import Question
+from .models import Question, Choice
 
 POLLS_INDEX = reverse('polls:index')
 
@@ -40,6 +40,12 @@ def create_question(question_text, days):
     return Question.objects.create(question_text=question_text, pub_date=time)
 
 
+def create_choice(choice_text, question):
+    """Create Choice for a question"""
+    return question.choice_set.create(choice_text=choice_text,
+                                votes=0)
+
+
 class QuestionIndexViewTest(TestCase):
 
     def setup(self):
@@ -52,10 +58,30 @@ class QuestionIndexViewTest(TestCase):
         self.assertContains(response, "No polls are available.")
         self.assertQuerysetEqual(response.context['latest_question_list'], [])
 
+    def test_question_empty_choices(self):
+        """test if question with no choices return 404"""
+        question = create_question(question_text="Some question", days=0)
+        response = self.client.get(POLLS_INDEX)
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_question_with_choice(self):
+        """test if question with any choice will be displayed"""
+        question = create_question(question_text="Some question", days=0)
+        choice = create_choice(choice_text="Some choice", question=question)
+        response = self.client.get(POLLS_INDEX)
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(
+            response.context['latest_question_list'],
+            [question],
+        )
+
     def test_past_question(self):
         """Questions with a pub_date in the past are displayed on the
          index page"""
         question = create_question(question_text='Past question', days=-30)
+        choice = create_choice(choice_text="generic choice",
+                                question=question)
         response = self.client.get(POLLS_INDEX)
         self.assertQuerysetEqual(
             response.context['latest_question_list'],

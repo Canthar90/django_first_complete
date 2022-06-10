@@ -166,11 +166,29 @@ class QuestionDetailViewTest(TestCase):
 
 class QuestionReasultsViewTest(TestCase):
 
+    def test_future_question_no_choice(self):
+        "test if results view for future question with no choice gives 404"
+        future_question = create_question(question_text="future question",
+                                        days=5)
+        url = reverse('polls:results', args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question_no_choice(self):
+        """test of results view for future question with no choice gives 404"""
+        past_question = create_question(question_text="Past quesrtion",
+                                        days=-5)
+        url = reverse('polls:results', args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_future_question(self):
         """test if results view for not published questions gives 404 after
         directly passing the addres"""
-        future_question = create_question(question_text="Future_question.",
+        future_question = create_question(question_text="Future question.",
                                             days=5)
+        future_choice = create_choice(choice_text="Future choice",
+                                    question=future_question)
         url = reverse('polls:results', args=(future_question.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
@@ -179,6 +197,8 @@ class QuestionReasultsViewTest(TestCase):
         """test if reasult view for publised question is visible"""
         past_question = create_question(question_text="Past question.",
                                         days=-5)
+        past_choice = create_choice(choice_text="Past choice",
+                                    question=past_question)
         url = reverse('polls:results', args=(past_question.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

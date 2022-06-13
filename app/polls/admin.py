@@ -2,10 +2,6 @@ from django.contrib import admin
 
 from .models import Question, Choice
 
-class Site(admin.AdminSite):
-    site_header = "Polls template side"
-    site_title = "Polls administration side"
-
 
 class ChoiceInline(admin.TabularInline):
     model = Choice
@@ -25,6 +21,5 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 
-admin_site = Site(name='admin')
 admin.site.register(Question, QuestionAdmin)
 
